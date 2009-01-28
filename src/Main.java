@@ -1,7 +1,10 @@
 import genend.classifier.ClassifyProb2;
+import org.ho.yaml.Yaml;
+import java.io.File;
 
 public class Main
 {
+
     public static void main(String[] args)
     {
         int[] piece_sizes = {36};
@@ -13,12 +16,13 @@ public class Main
 
         /*        StatProb2 test = new StatProb2(piece_sizes, kmer_min, kmer_max,
                   input_dir, output_dir, false, num_threads);*/
-
+        /*
         ClassifyProb2 test = new ClassifyProb2(piece_sizes, kmer_min, kmer_max,
                                                input_dir, output_dir, false, num_threads,
                                                db_name);
 
-        test.execute();
+        test.execute();*/
+
     }
 
 }
