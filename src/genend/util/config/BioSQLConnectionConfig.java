@@ -44,6 +44,7 @@ public class BioSQLConnectionConfig {
         password = cur_config.get("password");
         server = cur_config.get("server");
         dbName = cur_config.get("db_name");
+        
     }
 
     public String getUsername() { return username; }

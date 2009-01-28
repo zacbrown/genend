@@ -1,6 +1,8 @@
 import genend.classifier.ClassifyProb2;
-import org.ho.yaml.Yaml;
-import java.io.File;
+import org.biojavax.bio.db.ncbi.GenbankRichSequenceDB;
+import org.biojavax.bio.seq.RichSequence;
+import genend.util.GenbankSeqFetcher;
+
 
 public class Main
 {
@@ -23,6 +25,12 @@ public class Main
 
         test.execute();*/
 
+        String genomePath = "C:\\Users\\Zac\\Code\\Genend\\data\\test-genomes";
+        String configPath = "C:\\Users\\Zac\\Code\\Genend\\config.yml";
+        GenbankSeqFetcher myFetcher = 
+                new GenbankSeqFetcher(genomePath, 3, configPath, "default");
+
+        myFetcher.execute();
     }
 
 }
