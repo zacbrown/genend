@@ -28,7 +28,7 @@ public class Main
         String genomePath = "C:\\Users\\Zac\\Code\\Genend\\data\\test-genomes";
         String configPath = "C:\\Users\\Zac\\Code\\Genend\\config.yml";
         GenbankSeqFetcher myFetcher = 
-                new GenbankSeqFetcher(genomePath, 3, configPath, "default");
+                new GenbankSeqFetcher(genomePath, 1, configPath, "default");
 
         myFetcher.execute();
     }
