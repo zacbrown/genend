@@ -35,7 +35,7 @@ public class ClassifyProb2
     private int powers_of_four[] = new int[20];
     private int[] piece_sizes;
     private KmerDistribProcessor kmer_distrib_proc = null;
-    private final int iterations = 100;
+    private final int iterations = 50;
 
     public ClassifyProb2(int[] piece_sizes, int kmer_min, int kmer_max, String input_dir,
                          String output_dir, boolean gen_distrib, int num_threads,
@@ -218,7 +218,7 @@ public class ClassifyProb2
             int org_len = org_seq.length();
             double B, Bl, jp_factor, jp_summant;
 
-            System.out.println("\tSPECIES: "+spec_name.replace('_',' ')+
+            System.out.println("\tSPECIES: "+spec_name+
                                " | KMER: "+kmer_size+" | PIECE: "+piece_size+
                                " | THREADS: "+tpe.getActiveCount()+
                                " | TASKS LEFT: "+
@@ -226,16 +226,6 @@ public class ClassifyProb2
 
             if (org_len < 500000)
                 return;
-
-            String[] tokens = spec_name.split("_");
-            String cur_short_name = tokens[0] + " " + tokens[1];
-            Vector<String> cur_spec_tax = null;
-            /* FIIIIX MEEEE */
-            if (cur_spec_tax == null)
-            {
-                System.out.println(cur_short_name+" not found in database, skipping.");
-                return;
-            }
 
             B = powers_of_four[kmer_size - 1];
             Bl = B / 2.0;
@@ -284,12 +274,12 @@ public class ClassifyProb2
 
                 String high_spec_name = getHighestProb(prob_set);
 
-                if (high_spec_name.equals(cur_short_name))
+                if (high_spec_name.equals(spec_name))
                 {
                     for (int e = 0; e < 8; e++)
                         match_vals[e]++;
                 }
-                else match_vals = compareTaxonomies(cur_short_name, high_spec_name);
+                else match_vals = compareTaxonomies(spec_name, high_spec_name);
             }
 
             ret_vector.add(new ClassifyResultObj(kmer_size, piece_size, match_vals[0],
@@ -380,10 +370,10 @@ public class ClassifyProb2
             cur_spec_tax = fetchTaxonomy(cur_spec);
             high_spec_tax = fetchTaxonomy(high_spec);
 
-            for (int i = 7; i >= 0; i--)
+            for (int i = 6; i >= 0; i--)
             {
                 if (cur_spec_tax[i].equals(high_spec_tax[i]))
-                    match_vals[(i-7)*-1]++;
+                    match_vals[(i-6)*-1]++;
             }
 
             return match_vals;
