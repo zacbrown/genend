@@ -3,29 +3,43 @@ package genend.classifier;
 import genend.util.KmerDistribProcessor;
 import genend.util.SeqUtils;
 import genend.util.container.ClassifyResultObj;
+import genend.util.config.BioSQLConnectionConfig;
+import genend.util.config.BioSQLConfigException;
 
 import java.io.*;
+import java.sql.SQLException;
 import java.util.*;
-import java.sql.*;
 import java.util.Date;
 import java.text.DateFormat;
 import java.util.concurrent.*;
 
 
+//import org.biojava.bio.seq.db.biosql.BioSQLSequenceDB;
+//import org.biojava.bio.seq.Sequence;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.biojavax.bio.db.biosql.BioSQLRichSequenceDB;
+import org.biojavax.bio.seq.RichSequence;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.*;
 
 public class ClassifyProb2
 {
     private int kmer_min, kmer_max, num_threads;
-    private String output_dir, input_dir;
+    private String output_dir, input_dir, conf_name;
     private boolean gen_distrib;
     private int powers_of_four[] = new int[20];
     private int[] piece_sizes;
     private KmerDistribProcessor kmer_distrib_proc = null;
     private final int iterations = 100;
-    private SqlLoader sql;
 
     public ClassifyProb2(int[] piece_sizes, int kmer_min, int kmer_max, String input_dir,
-                         String output_dir, boolean gen_distrib, int num_threads, String db_name)
+                         String output_dir, boolean gen_distrib, int num_threads,
+                         String conf_name)
     {
         this.piece_sizes = piece_sizes;
         this.kmer_min = kmer_min;
@@ -35,7 +49,6 @@ public class ClassifyProb2
         this.gen_distrib = gen_distrib;
         this.num_threads = num_threads;
         kmer_distrib_proc = new KmerDistribProcessor(input_dir, output_dir, kmer_min, kmer_max, num_threads);
-        sql = new SqlLoader(db_name);
 
         for(int i = 0; i < powers_of_four.length; i++)
             powers_of_four[i] = (int)Math.pow(4.0, (double)i);
@@ -73,7 +86,7 @@ public class ClassifyProb2
                 {
                     Runnable r = new StatRun(iterations, input_files[i].toString(),
                                              piece_size, kmer_size, rel_distribs,
-                                             ret_vector, tpe, sql);
+                                             ret_vector, tpe, conf_name);
 
                     tpe.execute(r);
                 }
@@ -99,7 +112,6 @@ public class ClassifyProb2
 
             System.out.println("PIECE: " + piece_size + "... done.");
         }
-        sql.close();
     }
 
     double[] processKmer(Vector<ClassifyResultObj> results, double divisor)
@@ -135,7 +147,9 @@ public class ClassifyProb2
         try
         {
             br = new BufferedReader(new FileReader(path));
-            ret[0] = parse_header(br.readLine());
+            //ret[0] = parse_header(br.readLine());
+            br.readLine();
+            ret[0] = (new File(path)).getName();
             String line = "";
             while ((line = br.readLine()) != null)
                  str_builder.append(line.toUpperCase());
@@ -167,18 +181,18 @@ public class ClassifyProb2
     private class StatRun extends Thread
     {
         private int total_frags, iterations, piece_size, kmer_size;
-        private SqlLoader sql;
 
         private int[] match_vals = new int[7];
         private Vector<ClassifyResultObj> ret_vector;
-        private String input_file, spec_name;
+        private String input_file, spec_name, conf_name;
         private HashMap<String, HashMap<String, Double>> rel_distribs;
         private Random rg;
         private ThreadPoolExecutor tpe;
+        private BioSQLConnectionConfig biosql = null;
 
         StatRun(int iterations, String input_file, int piece_size,
                 int kmer_size, HashMap<String, HashMap<String, Double>> rel_distribs,
-                Vector<ClassifyResultObj> ret_vector, ThreadPoolExecutor tpe, SqlLoader sql)
+                Vector<ClassifyResultObj> ret_vector, ThreadPoolExecutor tpe, String conf_name)
         {
             this.iterations = iterations;
             this.kmer_size = kmer_size;
@@ -187,8 +201,11 @@ public class ClassifyProb2
             this.rel_distribs = rel_distribs;
             this.ret_vector = ret_vector;
             this.tpe = tpe;
-            this.sql = sql;
             rg = new Random();
+            try {
+                biosql = new BioSQLConnectionConfig(conf_name, "default");
+            }
+            catch (BioSQLConfigException e) { e.printStackTrace(); }
         }
 
         public void run()
@@ -211,7 +228,7 @@ public class ClassifyProb2
             String[] tokens = spec_name.split("_");
             String cur_short_name = tokens[0] + " " + tokens[1];
             Vector<String> cur_spec_tax = null;
-            cur_spec_tax = sql.get(cur_short_name);
+            /* FIIIIX MEEEE */
             if (cur_spec_tax == null)
             {
                 System.out.println(cur_short_name+" not found in database, skipping.");
@@ -265,35 +282,109 @@ public class ClassifyProb2
 
                 String high_spec_name = getHighestProb(prob_set);
 
-                if (high_spec_name.equals(spec_name))
+                if (high_spec_name.equals(cur_short_name))
                 {
-                    for (int ind = 0; ind < match_vals.length; ind++)
-                        match_vals[ind]++;
+                    for (int e = 0; e < 8; e++)
+                        match_vals[e]++;
                 }
-                else
-                {
-                    Vector<String> high_spec_tax = null;
-                    String high_short_name = "";
-                    tokens = high_spec_name.split("_");
-                    high_short_name = tokens[0] + " " + tokens[1];
-                    high_spec_tax = sql.get(high_short_name);
-                    if (high_spec_tax == null)
-                    {
-                        System.out.println(high_short_name+" (high) not found in database, skipping.");
-                        return;
-                    }
-
-                    for (int ind = 0; ind < high_spec_tax.size(); ind++)
-                    {
-                        if (high_spec_tax.get(ind).equals(cur_spec_tax.get(ind)))
-                            match_vals[ind]++;
-                    }
-                }
+                else match_vals = compareTaxonomies(cur_short_name, high_spec_name);
             }
 
             ret_vector.add(new ClassifyResultObj(kmer_size, piece_size, match_vals[0],
                                                  match_vals[1], match_vals[2], match_vals[3],
                                                  match_vals[4], match_vals[5], match_vals[6]));
+        }
+
+        String[] fetchTaxonomy(String id)
+        {
+            String[] tax = new String[7];
+            String url = "jdbc:mysql://" + biosql.getServer() + ":3306/biosql";
+            int index = 0;
+            // load the mysql driver
+            try { Class.forName("com.mysql.jdbc.Driver"); }
+            catch (ClassNotFoundException ex) {
+                System.out.println("Cannot find DB driver, is it on your classpath?");
+            }
+
+            try {
+                Connection conn = DriverManager.getConnection(url,
+                        biosql.getUsername(), biosql.getPassword());
+
+                String cur_taxon_id = null;
+                String query = "SELECT taxon_id FROM bioentry WHERE name='" + id + "'";
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query);
+
+                if (rs.next()) cur_taxon_id = rs.getString(1);
+                else return null;
+
+                boolean done = false;
+
+                while (done == false)
+                {
+                    String rank = "", next_taxon_id;
+                    query = "SELECT node_rank, parent_taxon_id " +
+                            "FROM taxon WHERE taxon_id='" + cur_taxon_id +"'";
+
+                    rs = stmt.executeQuery(query);
+                    if (rs.next()) {
+                        
+                        rank = rs.getString(1);
+
+                        if (rank.equals("genus") &&
+                            rank.equals("species") &&
+                            rank.equals("order") &&
+                            rank.equals("family") &&
+                            rank.equals("phylum") &&
+                            rank.equals("class")) continue;
+
+                        if (rank.equals("kingdom")) break;
+
+                        next_taxon_id = rs.getString(2);
+
+                        query = "SELECT name FROM taxon_name WHERE " +
+                                "name_class='scientific name' AND " +
+                                "taxon_id='" + cur_taxon_id;
+
+                        stmt.execute(query);
+
+                        if (rs.next())
+                        {
+                            tax[index] = rs.getString(1);
+                        }
+                        else return null;
+
+                        cur_taxon_id = next_taxon_id;
+                    }
+                    else return null;
+                }
+
+                rs.close();
+                stmt.close();
+                conn.close();
+
+            } catch (SQLException ex) {
+                Logger.getLogger(ClassifyProb2.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            return tax;
+        }
+
+        int[] compareTaxonomies(String cur_spec, String high_spec)
+        {
+            int[] match_vals = new int[7];
+            String[] cur_spec_tax, high_spec_tax;
+
+            cur_spec_tax = fetchTaxonomy(cur_spec);
+            high_spec_tax = fetchTaxonomy(high_spec);
+
+            for (int i = 7; i >= 0; i--)
+            {
+                if (cur_spec_tax[i].equals(high_spec_tax[i]))
+                    match_vals[(i-7)*-1]++;
+            }
+
+            return match_vals;
         }
 
         String getHighestProb(HashMap<String, ArrayList<Double>> prob_set)
@@ -409,50 +500,5 @@ public class ClassifyProb2
             System.out.println("Done loading distributions for K-mer size: " + kmer_size);
             return ret_table;
         }
-    }
-
-    private class SqlLoader
-    {
-        private Statement stat = null;
-        private Connection conn = null;
-        private final String[] fields = {"name", "kingdom", "phylum", "class",
-                                         "order_tax", "family", "genus"};
-
-        public SqlLoader(String db_filename)
-        {
-            try
-            {
-                Class.forName("org.sqlite.JDBC");
-                conn = DriverManager.getConnection("jdbc:sqlite:"+db_filename);
-                stat = conn.createStatement();
-            }
-            catch (Exception e) { e.printStackTrace(); }
-        }
-
-        public void close()
-        {
-            try { conn.close(); }
-            catch (Exception e) { e.printStackTrace(); }
-        }
-
-        public synchronized Vector<String> get(String name)
-        {
-            Vector<String> ret_vector = new Vector<String>();
-            try
-            {
-                ResultSet rs = stat.executeQuery("select * from taxonomy where name=\""+
-                                                 name+"\"");
-                if (rs.isAfterLast())
-                    return null;
-
-                for (String field : fields)
-                    ret_vector.add(rs.getString(field));
-                rs.close();
-
-            }
-            catch (Exception e) { e.printStackTrace(); }
-            return ret_vector;
-        }
-
     }
 }
