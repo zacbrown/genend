@@ -48,6 +48,7 @@ public class ClassifyProb2
         this.output_dir = output_dir;
         this.gen_distrib = gen_distrib;
         this.num_threads = num_threads;
+        this.conf_name = conf_name;
         kmer_distrib_proc = new KmerDistribProcessor(input_dir, output_dir, kmer_min, kmer_max, num_threads);
 
         for(int i = 0; i < powers_of_four.length; i++)
@@ -84,6 +85,7 @@ public class ClassifyProb2
 
                 for (int i = 0; i < input_files.length; i++)
                 {
+                    System.out.println("conf_name: " + conf_name);
                     Runnable r = new StatRun(iterations, input_files[i].toString(),
                                              piece_size, kmer_size, rel_distribs,
                                              ret_vector, tpe, conf_name);
