@@ -47,8 +47,12 @@ public class StatProb2
         {
             String str_date = DateFormat.getDateInstance(DateFormat.SHORT).format(new Date()).replace("/", ".");
             String filename = "piece-" + Integer.toString(piece_size) + "-" + str_date + ".dat";
-            FileOutputStream fout = null;
-            try { fout = new FileOutputStream(filename); }
+            String match_filename = "match-" + Integer.toString(piece_size) + "-" + str_date + ".dat";
+            FileOutputStream fout = null, match_fout = null;
+            try {
+                fout = new FileOutputStream(filename);
+                match_fout = new FileOutputStream(match_filename);
+            }
             catch (Exception e) { e.printStackTrace(); }
 
             for (int kmer_size = kmer_min; kmer_size <= kmer_max; kmer_size++)
@@ -74,6 +78,21 @@ public class StatProb2
                 catch (Exception e) { e.printStackTrace(); }
 
                 System.out.println("\tKMER: " + kmer_size + "... done.");
+
+                // output matches to file
+                PrintStream printer;
+                try {
+                    printer = new PrintStream(match_fout);
+                    for (int f = 0; f < ret_vector.size(); f++) {
+                        ResultObj tmp_obj = ret_vector.get(f);
+
+                        printer.println(tmp_obj.getCurSpec() + "\t" + tmp_obj.getHighSpec());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
                 double val = processKmer(ret_vector, (double)(iterations*ret_vector.size()));
                 String write_ln = Integer.toString(kmer_size) + "\t" + Double.toString(val);
                 try { new PrintStream(fout).println(write_ln); }
@@ -109,7 +128,9 @@ public class StatProb2
         try
         {
             br = new BufferedReader(new FileReader(path));
-            ret[0] = parse_header(br.readLine());
+            //ret[0] = parse_header(br.readLine());
+            br.readLine();
+            ret[0] = (new File(path)).getName();
             String line = "";
             while ((line = br.readLine()) != null)
                  str_builder.append(line.toUpperCase());
@@ -166,6 +187,7 @@ public class StatProb2
         {
             String[] cur_org_info = parse_genome_file(input_file);
             spec_name = cur_org_info[0];
+            String high_spec_name = "";
             String org_seq = cur_org_info[1];
             int org_len = org_seq.length();
             double B, Bl, jp_factor, jp_summant;
@@ -224,13 +246,13 @@ public class StatProb2
                     }
                 }
 
-                String high_spec_name = getHighestProb(prob_set);
+                high_spec_name = getHighestProb(prob_set);
 
                 if (high_spec_name.equals(spec_name))
                     org_matches++;
             }
 
-            ret_vector.add(new ResultObj(kmer_size, piece_size, org_matches));
+            ret_vector.add(new ResultObj(kmer_size, piece_size, org_matches, spec_name, high_spec_name));
         }
 
         String getHighestProb(HashMap<String, ArrayList<Double>> prob_set)

@@ -1,7 +1,5 @@
 import genend.classifier.ClassifyProb2;
-import org.biojavax.bio.db.ncbi.GenbankRichSequenceDB;
-import org.biojavax.bio.seq.RichSequence;
-
+import genend.classifier.StatProb2;
 
 public class Main
 {
@@ -10,17 +8,17 @@ public class Main
     {
         int[] piece_sizes = {36};
         int kmer_min = 3, kmer_max = 5;
-        String output_dir = "/home/zbrown/genomics/dists-archaea/";
-        String input_dir = "/home/zbrown/genomics/genomes-archaea/";
-        String conf_yaml = "/home/zbrown/genomics/genend/config.yml";
+        String output_dir = "/home/zbrown/genomes/dists-archaea/";
+        String input_dir = "/home/zbrown/genomes/genomes-archaea/";
+        String conf_yaml = "/home/zbrown/genend/config.yml";
         int num_threads = 6;
 
-        /*        StatProb2 test = new StatProb2(piece_sizes, kmer_min, kmer_max,
-                  input_dir, output_dir, false, num_threads);*/
+        StatProb2 test = new StatProb2(piece_sizes, kmer_min, kmer_max,
+                input_dir, output_dir, false, num_threads);
         
-        ClassifyProb2 test = new ClassifyProb2(piece_sizes, kmer_min, kmer_max,
+        /*ClassifyProb2 test = new ClassifyProb2(piece_sizes, kmer_min, kmer_max,
                                                input_dir, output_dir, false, num_threads,
-                                               conf_yaml);
+                                               conf_yaml);*/
 
         test.execute();
     }
