@@ -81,7 +81,6 @@ file_h.close
 output_h = open(sys.argv[2], 'w')
 
 print match_vals
-output_h.write("#key\tmatch\ttotal\n")
 
 for key, val in match_vals.iteritems():
     output_h.write(key + "\t" + str(val) + "\t" + str(total_vals[key]) + "\n")

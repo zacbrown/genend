@@ -86,7 +86,8 @@ public class StatProb2
                     for (int f = 0; f < ret_vector.size(); f++) {
                         ResultObj tmp_obj = ret_vector.get(f);
 
-                        printer.println(tmp_obj.getCurSpec() + "\t" + tmp_obj.getHighSpec());
+                        printer.println(kmer_size + "\t" + tmp_obj.getCurSpec()
+                                + "\t" + tmp_obj.getHighSpec());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
