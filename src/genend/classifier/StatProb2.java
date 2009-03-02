@@ -1,5 +1,4 @@
 package genend.classifier;
-import genend.util.KmerDistribProcessor;
 import genend.util.SeqUtils;
 import genend.util.container.ResultObj;
 
@@ -17,7 +16,7 @@ public class StatProb2
     private boolean gen_distrib;
     private int powers_of_four[] = new int[20];
     private int[] piece_sizes;
-    private final int iterations = 1000;
+    private final int iterations = 100;
 
 
     public StatProb2(int[] piece_sizes, int kmer_min, int kmer_max, String input_dir,
@@ -87,7 +86,7 @@ public class StatProb2
                         ResultObj tmp_obj = ret_vector.get(f);
 
                         printer.println(kmer_size + "\t" + tmp_obj.getCurSpec()
-                                + "\t" + tmp_obj.getHighSpec());
+                                + "\t" + tmp_obj.getHighSpec() + "\t" + tmp_obj.getScore());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -184,10 +183,12 @@ public class StatProb2
             rg = new Random();
         }
 
+        @Override
         public void run()
         {
             String[] cur_org_info = parse_genome_file(input_file);
             spec_name = cur_org_info[0];
+            ProbObj high_spec_obj = null;
             String high_spec_name = "";
             String org_seq = cur_org_info[1];
             int org_len = org_seq.length();
@@ -247,32 +248,36 @@ public class StatProb2
                     }
                 }
 
-                high_spec_name = getHighestProb(prob_set);
+                high_spec_obj = getHighestProb(prob_set);
+                high_spec_name = high_spec_obj.getName();
 
                 if (high_spec_name.equals(spec_name))
                     org_matches++;
             }
 
-            ret_vector.add(new ResultObj(kmer_size, piece_size, org_matches, spec_name, high_spec_name));
+            ret_vector.add(new ResultObj(kmer_size, piece_size, org_matches, 
+                    spec_name, high_spec_name, high_spec_obj.getScore()));
         }
 
-        String getHighestProb(HashMap<String, ArrayList<Double>> prob_set)
+        ProbObj getHighestProb(HashMap<String, ArrayList<Double>> prob_set)
         {
             Map.Entry tmp_pair = null, high_pair = null;
             Iterator itr = prob_set.entrySet().iterator();
+            Double high_dbl = null, tmp_dbl = null;
             high_pair = (Map.Entry) itr.next();
             while (itr.hasNext())
             {
                 tmp_pair = (Map.Entry) itr.next();
                 ArrayList<Double> high_arr = (ArrayList<Double>)high_pair.getValue();
                 ArrayList<Double> tmp_arr = (ArrayList<Double>)tmp_pair.getValue();
-                Double tmp_dbl = tmp_arr.get(tmp_arr.size() - 1);
-                Double high_dbl = high_arr.get(high_arr.size() - 1);
+                tmp_dbl = tmp_arr.get(tmp_arr.size() - 1);
+                high_dbl = high_arr.get(high_arr.size() - 1);
                 //                System.out.println("tmp_dbl: "+tmp_dbl + " | high_dbl: "+high_dbl);
                 if (tmp_dbl.compareTo(high_dbl) >= 0)
                     high_pair = tmp_pair;
             }
-            return (String)high_pair.getKey();
+            return new ProbObj((String)high_pair.getKey(),
+                    high_dbl.doubleValue());
         }
 
         HashMap<String, ArrayList<Double>> getEmptyProbSet(Set<String> spec_set)
@@ -332,6 +337,7 @@ public class StatProb2
         public HashMap<String, HashMap<String, Double>> get()
         {
             File input_dir_h = new File(input_dir);
+            System.out.println("input_dir: "+input_dir);
             File files[] = input_dir_h.listFiles();
             HashMap<String, HashMap<String, Double>> ret_table =
                 new HashMap<String, HashMap<String, Double>>();
@@ -378,4 +384,24 @@ public class StatProb2
             return ret_table;
         }
     }
+
+    private class ProbObj {
+
+        private String name;
+        private double score;
+
+        public ProbObj(String name, double score) {
+            this.name = name;
+            this.score = score;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getScore() {
+            return score;
+        }
+    }
+
 }
