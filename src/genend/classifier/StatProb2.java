@@ -16,7 +16,7 @@ public class StatProb2
     private boolean gen_distrib;
     private int powers_of_four[] = new int[20];
     private int[] piece_sizes;
-    private final int iterations = 100;
+    private final int iterations = 50;
 
 
     public StatProb2(int[] piece_sizes, int kmer_min, int kmer_max, String input_dir,

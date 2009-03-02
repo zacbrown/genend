@@ -57,14 +57,30 @@ file_h = open(sys.argv[1], "rU")
 db_h = MySQLdb.connect(host=db_vals["server"], user=db_vals["username"],
                        passwd=db_vals["password"], db=db_vals["database"])
 
-match_vals = {"kingdom":0, "phylum":0, "class":0, "order":0, "family":0, "genus":0}
-total_vals = {"kingdom":0, "phylum":0, "class":0, "order":0, "family":0, "genus":0}
+match_vals = {"superkingdom":0, "phylum":0, "class":0, "order":0, "family":0, "genus":0}
+total_vals = {"superkingdom":0, "phylum":0, "class":0, "order":0, "family":0, "genus":0}
 
 cursor = db_h.cursor()
 count_measured = 0
-
+counter = 0
+cur_kmer = 3
 for line in file_h:
     (cur_spec, sep, high_spec) = line.partition("\t")
+    if counter == 48:
+        output_h = open(sys.argv[2]+str(cur_kmer), 'w')
+
+        print match_vals
+        output_h.write("#key\tmatch\ttotal\n")
+
+        for key, val in match_vals.iteritems():
+            output_h.write(key + "\t" + str(val) + "\t"
+                           + str(total_vals[key]) + "\n")
+            match_vals[key] = 0; total_vals[key] = 0;
+        cur_kmer += 1
+        counter = 0
+
+        output_h.close
+    else: counter += 1
 
     print 'Fetching: %s | %s' % (cur_spec, high_spec)
     cur_spec_tax = fetchTaxonomy(cur_spec, cursor)
@@ -78,13 +94,6 @@ for line in file_h:
             if cur_spec_tax[key] == high_spec_tax[key]: match_vals[key] += 1
 
 file_h.close
-output_h = open(sys.argv[2], 'w')
 
-print match_vals
-
-for key, val in match_vals.iteritems():
-    output_h.write(key + "\t" + str(val) + "\t" + str(total_vals[key]) + "\n")
-
-output_h.close
 db_h.close
 print "DONE DOIN' WORK SON!"
