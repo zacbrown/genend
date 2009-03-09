@@ -30,8 +30,13 @@ def process_groups(score_array, match_array)
   cur_chunk_ind = 0
 
   while cur_chunk_ind < len
-    tmp_score_array = score_array[cur_chunk_ind, chunk_size - 1]
-    tmp_match_array = match_array[cur_chunk_ind, chunk_size - 1]
+    if cur_chunk_ind + chunk_size > len
+      tmp_score_array = score_array[cur_chunk_ind, len - 1]
+      tmp_match_array = match_array[cur_chunk_ind, len - 1]
+    else
+      tmp_score_array = score_array[cur_chunk_ind, chunk_size - 1]
+      tmp_match_array = match_array[cur_chunk_ind, chunk_size - 1]
+    end
 
     count = tmp_match_array.count_true
     perc = ("%5.4f" % (count.to_f / chunk_size.to_f * 100)).to_f
@@ -56,11 +61,19 @@ score_vals = {'3'=>[],'4'=>[],'5'=>[],'6'=>[],'7'=>[],'8'=>[]}
 
 File.open(file, 'r').each { |line|
   tokens = line.split(' ')
+  tokens.delete ''
+  str = "["
+  tokens.each { |val|
+    str << "\'#{val}\',"
+  }
+  str << "]"
+  if tokens.size > 4 then puts str end
   score_vals[tokens[0]] << Record.new(tokens[1] == tokens[2], tokens[3].to_f)
 }
 
 graph_hash = {}
 low = 0.0; high = 0.0;
+short_len = 1000000000
 
 score_vals.each { |key,value|
   next if value == []
@@ -74,10 +87,19 @@ score_vals.each { |key,value|
     match_arr << record.match
   }
 
+  short_len = score_arr.size if score_arr.size < short_len
   low = ("%5.2f" % score_arr[0]).to_f if key == '3'
-  high = ("%5.2f" % score_arr[score_arr.size - 1]).to_f if key == '8'
-
+  high = ("%5.2f" % score_arr[score_arr.size - 2]).to_f if key == '8'
+  puts score_arr
   graph_hash[key] = process_groups(score_arr, match_arr)
+}
+
+# truncate arrays that are longer than the shortest in the group
+graph_hash.each { |key,value|
+  if value.size > short_len
+    diff = value.size - short_len
+    value.slice! 0, diff
+  end
 }
 
 graph = Gruff::Line.new
@@ -89,6 +111,7 @@ graph.y_axis_label = "percent identified"
 # setup data
 graph_hash.each { |key,value|
   graph.data "#{key}-mer", value
+  puts "#{key} - #{value.size}"
 }
 
 # prep labels for x axis

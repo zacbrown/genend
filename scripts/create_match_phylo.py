@@ -40,13 +40,7 @@ def fetchTaxonomy (in_seq_name, cursor):
 
         if next_taxon_id == 1: break
 
-        query = "SELECT name FROM taxon_name WHERE "
-        query += "name_class='scientific name' AND "
-        query += "taxon_id='%s'" % cur_taxon_id
-
-        cursor.execute(query)
-
-        ret_dict[rank] = cursor.fetchone()[0]
+        ret_dict[rank] = cur_taxon_id
 
         cur_taxon_id = next_taxon_id
 
