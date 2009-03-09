@@ -75,7 +75,7 @@ score_vals.each { |key,value|
 
   graph = Gruff::Line.new
   graph.theme_keynote
-  graph.title = "#{key}-mer #{header} - 100 samples - 300 chunks"
+  graph.title = "#{key}-mer #{header} - #{piece_size} bp pieces - 100 draws"
   graph.data "percent identified", graph_arr
   graph.x_axis_label = "probability score"
   graph.y_axis_label = "percent identified"
