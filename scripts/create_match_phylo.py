@@ -40,7 +40,7 @@ def fetchTaxonomy (in_seq_name, cursor):
 
         if next_taxon_id == 1: break
 
-        ret_dict[rank] = cur_taxon_id
+        ret_dict[rank] = str(cur_taxon_id)
 
         cur_taxon_id = next_taxon_id
 
