@@ -34,7 +34,7 @@ def process_groups(score_array, match_array)
     tmp_match_array = match_array[cur_chunk_ind, chunk_size - 1]
 
     count = tmp_match_array.count_true
-    perc = ("%3.4f" % (count.to_f / chunk_size.to_f * 100)).to_f
+    perc = ("%5.4f" % (count.to_f / chunk_size.to_f * 100)).to_f
     for i in cur_chunk_ind .. (cur_chunk_ind + chunk_size - 1)
       ret_array[i] = perc
     end
@@ -60,6 +60,7 @@ File.open(file, 'r').each { |line|
 }
 
 graph_hash = {}
+low = 0.0; high = 0.0;
 
 score_vals.each { |key,value|
   next if value == []
@@ -72,6 +73,9 @@ score_vals.each { |key,value|
     score_arr << record.score
     match_arr << record.match
   }
+
+  low = ("%5.2f" % score_arr[0]).to_f if key == '3'
+  high = ("%5.2f" % score_arr[score_arr.size - 1]).to_f if key == '8'
 
   graph_hash[key] = process_groups(score_arr, match_arr)
 }
@@ -88,10 +92,9 @@ graph_hash.each { |key,value|
 }
 
 # prep labels for x axis
-low = ("%5.2f" % graph_hash['8'][0]).to_f
-high = ("%5.2f" % graph_hash['8'][graph_hash['8'].size - 1]).to_f
 incr = ("%5.2f" % ((high - low) / 5.0)).to_f
-graph_chunks = graph_hash['8'].size / 5
+puts "low: #{low} || high: #{high}"
+graph_chunks = graph_hash['6'].size / 5
 graph_x_vals = (1..4).to_a
 graph_x_vals.map! { |val| val * graph_chunks }
 
