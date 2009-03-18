@@ -2,6 +2,9 @@
 
 require 'rubygems'
 require 'gruff'
+require 'gsl'
+
+SPACINGS = 50
 
 class Record
   attr_accessor :score, :match
@@ -24,7 +27,7 @@ end
 
 def process_groups(score_array, match_array)
   len = score_array.size
-  chunk_size = len / 150
+  chunk_size = len / SPACINGS
   ret_array = Array.new
 
   cur_chunk_ind = 0
@@ -50,24 +53,28 @@ def process_groups(score_array, match_array)
   return ret_array
 end
 
+def poly_fit(data, degree)
+  y = Vector(data)
+  last_val = data.length - 1
+  x = Vector((0..last_val).to_a)
+
+  coef, err, chisq, status = MultiFit.polyfit(x, y, degree)
+  x2 = Vector.linspace(1, last_val, SPACINGS)
+
+  return coef.eval(x2)
+end
 
 file = ARGV[0]
 split_num = ARGV[1]
 piece_size = file.split('-')[1]
 date = file.split('-')[2].chomp('.dat')
 header = file.split('-')[0]
+NUM_KMERS = 31050
 
 score_vals = {'3'=>[],'4'=>[],'5'=>[],'6'=>[],'7'=>[],'8'=>[]}
 
 File.open(file, 'r').each { |line|
   tokens = line.split(' ')
-  tokens.delete ''
-  str = "["
-  tokens.each { |val|
-    str << "\'#{val}\',"
-  }
-  str << "]"
-  if tokens.size > 4 then puts str end
   score_vals[tokens[0]] << Record.new(tokens[1] == tokens[2], tokens[3].to_f)
 }
 
@@ -90,7 +97,6 @@ score_vals.each { |key,value|
   short_len = score_arr.size if score_arr.size < short_len
   low = ("%5.2f" % score_arr[0]).to_f if key == '3'
   high = ("%5.2f" % score_arr[score_arr.size - 2]).to_f if key == '8'
-  puts score_arr
   graph_hash[key] = process_groups(score_arr, match_arr)
 }
 
@@ -103,15 +109,18 @@ graph_hash.each { |key,value|
 }
 
 graph = Gruff::Line.new
-graph.theme_keynote
+graph.theme_keynote #2E37FE
+graph.replace_colors ["#ff0000", "#00ff00", "#3333FF",
+                      "#ff00ff", "#ffff00", "#ffffff"]
 graph.title = "#{header} - #{piece_size} bp pieces - 100 draws"
 graph.x_axis_label = "probability score"
 graph.y_axis_label = "percent identified"
+graph.maximum_value = 100
+graph.minimum_value = 0
 
 # setup data
 graph_hash.each { |key,value|
   graph.data "#{key}-mer", value
-  puts "#{key} - #{value.size}"
 }
 
 # prep labels for x axis
