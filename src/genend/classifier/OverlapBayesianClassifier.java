@@ -132,8 +132,10 @@ public class OverlapBayesianClassifier
             br.readLine();
             ret[0] = (new File(path)).getName();
             String line = "";
-            while ((line = br.readLine()) != null)
-                 str_builder.append(line.toUpperCase());
+            while ((line = br.readLine()) != null) {
+                if (line.contains(">")) break;
+                str_builder.append(line.toUpperCase());
+            }
             ret[1] = str_builder.toString();
             br.close();
         }
@@ -216,8 +218,8 @@ public class OverlapBayesianClassifier
                 HashMap<String, ArrayList<Double>> prob_set =
                     getEmptyProbSet(rel_distribs.keySet());
 
-                String str_kmer = getFragment(org_seq, org_len, piece_size);
-                int count = 0, str_kmer_len;
+                String str_kmer = "";
+                int str_kmer_len;
 
                 if (i + piece_size < org_len)
                     str_kmer = org_seq.substring(i, i+piece_size);
@@ -229,6 +231,7 @@ public class OverlapBayesianClassifier
                 for (int ind = 1; ind < str_kmer_len - kmer_size + 1; ind++)
                 {
                     String tmp_frag = str_kmer.substring(ind, ind + kmer_size);
+                    if (!SeqUtils.matchBases(tmp_frag)) continue;
 
                     for (int j = 0; j < files.length; j++)
                     {
