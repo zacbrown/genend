@@ -68,7 +68,7 @@ public class OverlapBayesianClassifier2
                 {
                     String tmp_str = "";
                     if (i + piece_size < org_len)
-                        tmp_str = org_seq.substring(i, piece_size);
+                        tmp_str = org_seq.substring(i, i + piece_size);
                     else
                         tmp_str = org_seq.substring(i);
 
