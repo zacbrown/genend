@@ -1,5 +1,5 @@
 import genend.classifier.ClassifyProb2;
-import genend.classifier.StatProb2;
+import genend.classifier.BayesianClassifier;
 
 public class Main
 {
@@ -13,7 +13,8 @@ public class Main
         String conf_yaml = "/home/zbrown/genomics/genend/config.yml";
         int num_threads = 6;
 
-        StatProb2 test = new StatProb2(piece_sizes, kmer_min, kmer_max,
+
+        BayesianClassifier test = new BayesianClassifier(piece_sizes, kmer_min, kmer_max,
                 input_dir, output_dir, false, num_threads);
         
         /*ClassifyProb2 test = new ClassifyProb2(piece_sizes, kmer_min, kmer_max,

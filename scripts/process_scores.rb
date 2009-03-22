@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'gruff'
-require 'gsl'
+#require 'gsl'
 
 SPACINGS = 50
 
@@ -53,16 +53,16 @@ def process_groups(score_array, match_array)
   return ret_array
 end
 
-def poly_fit(data, degree)
-  y = Vector(data)
-  last_val = data.length - 1
-  x = Vector((0..last_val).to_a)
+# def poly_fit(data, degree)
+#   y = Vector(data)
+#   last_val = data.length - 1
+#   x = Vector((0..last_val).to_a)
 
-  coef, err, chisq, status = MultiFit.polyfit(x, y, degree)
-  x2 = Vector.linspace(1, last_val, SPACINGS)
+#   coef, err, chisq, status = MultiFit.polyfit(x, y, degree)
+#   x2 = Vector.linspace(1, last_val, SPACINGS)
 
-  return coef.eval(x2)
-end
+#   return coef.eval(x2)
+# end
 
 file = ARGV[0]
 split_num = ARGV[1]
