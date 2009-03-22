@@ -213,7 +213,7 @@ public class OverlapBayesianClassifier
             File f = new File(output_dir);
             File[] files = f.listFiles();
 
-            for (int i = 0; i < org_len; org_len += offset)
+            for (int i = 0; i < org_len; i += offset)
             {
                 HashMap<String, ArrayList<Double>> prob_set =
                     getEmptyProbSet(rel_distribs.keySet());
