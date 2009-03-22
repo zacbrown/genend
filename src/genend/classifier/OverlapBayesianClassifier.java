@@ -221,6 +221,8 @@ public class OverlapBayesianClassifier
                 String str_kmer = "";
                 int str_kmer_len;
 
+                if (i % 100000 == 0) System.out.println("current ind: " + i);
+
                 if (i + piece_size < org_len)
                     str_kmer = org_seq.substring(i, i+piece_size);
                 else
