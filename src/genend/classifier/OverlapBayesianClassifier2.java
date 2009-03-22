@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 
 
 
-public class OverlapBayesianClassifier
+public class OverlapBayesianClassifier2
 {
     private int kmer_min, kmer_max, num_threads;
     private String output_dir, input_file;
@@ -19,7 +19,7 @@ public class OverlapBayesianClassifier
     private final int offset = 5000;
 
 
-    public OverlapBayesianClassifier(int[] piece_sizes, int kmer_min, int kmer_max, String input_file,
+    public OverlapBayesianClassifier2(int[] piece_sizes, int kmer_min, int kmer_max, String input_file,
                      String output_dir, boolean gen_distrib, int num_threads)
     {
         this.piece_sizes = piece_sizes;
