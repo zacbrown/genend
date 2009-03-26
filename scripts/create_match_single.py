@@ -62,7 +62,8 @@ cur_kmer = 3
 
 splitter = re.compile(r'([-.])')
 piece_size = splitter.split(sys.argv[1])[2]
-output_h = open("phylo-"+piece_size+"-"+date+".dat",'w')
+spec_name = splitter.split(sys.argv[1])[0]
+output_h = open(spec_name+"-phylo-"+piece_size+"-"+date+".dat",'w')
 
 token_split_tab = re.compile(r'\t')
 for line in file_h:
@@ -110,6 +111,7 @@ for line in file_h:
         output_line += '\tnil'
 
     output_line += '\t' + tokens[3]
+    output_h.write(output_line)
 
 file_h.close
 output_h.close

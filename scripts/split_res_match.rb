@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
 file_toks = ARGV[0].split('-')
-size = file_toks[1]
+size = file_toks[1].to_i
+puts file_toks[1].class
 file_h = nil
 cur_spec = ""
 
