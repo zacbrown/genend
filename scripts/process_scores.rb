@@ -25,6 +25,7 @@ class Array
   end
 end
 
+# this creates 50 groups of equal length
 def process_groups(score_array, match_array)
   len = score_array.size
   chunk_size = len / SPACINGS
@@ -43,9 +44,13 @@ def process_groups(score_array, match_array)
 
     count = tmp_match_array.count_true
     perc = ("%5.4f" % (count.to_f / chunk_size.to_f * 100)).to_f
-    for i in cur_chunk_ind .. (cur_chunk_ind + chunk_size - 1)
-      ret_array[i] = perc
+    tmp_array = Array.new
+
+    for i in 0 .. (tmp_score_array[-1] - tmp_score_array[0]).to_i
+      tmp_array[i] = perc
     end
+
+    ret_array += tmp_array
 
     cur_chunk_ind += chunk_size
   end
