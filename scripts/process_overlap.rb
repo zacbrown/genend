@@ -23,27 +23,34 @@ class Array
     }
     return ret_val
   end
+
+  def sum
+    inject( nil ) { |sum,x| sum ? sum+x : x }
+  end
+
+  def mean
+    sum / size
+  end
 end
 
 def process_groups(score_array, match_array)
-  small = score_array[0]
+  small = score_array.mean
   len = score_array.size
   ret_array = [[],[],[],[],[],[]]
   match_index = 0
 
   match_array.each { |row|
-    val = row.index('true')
-    if val == nil
-      ret_array.each { |array| array << small }
-    else
-      ret_array[val] << score_array[match_index]
-      match_index += 1
-
-      for i in (0..5)
-        if i == val then next end
-        ret_array[i] << small
+    ind = 0
+    row.each do |val|
+      if val == nil
+        ret_array.each { |array| array << small }
+        ind += 1
+      else
+        ret_array[ind] << score_array[match_index]
+        ind += 1
       end
     end
+    match_index += 1
   }
 
   return ret_array
@@ -75,7 +82,6 @@ File.open(file, 'r').each { |line|
 }
 
 graph_hash = {}
-low = 0.0; high = 0.0;
 short_len = 1000000000
 
 score_vals.each { |key,value|
@@ -91,18 +97,8 @@ score_vals.each { |key,value|
   }
 
   short_len = score_arr.size if score_arr.size < short_len
-#   low = ("%5.2f" % score_arr[0]).to_f if key == '3'
-#   high = ("%5.2f" % score_arr[score_arr.size - 2]).to_f if key == '8'
   graph_hash[key] = process_groups(score_arr, match_arr)
 }
-
-# truncate arrays that are longer than the shortest in the group
-# graph_hash.each { |key,value|
-#   if value.size > short_len
-#     diff = value.size - short_len
-#     value.slice! 0, diff
-#   end
-# }
 
 colors = {:my_green =>'#00FF00',:my_pale_green => '#66CC00',
   :my_pale_yellow => '#CCFF00', :my_yellow => '#FFFF00',
@@ -114,27 +110,35 @@ graph_hash.each { |key,value|
   graph.theme_keynote #2E37FE
   graph.replace_colors ["#ffffff", "#00ff00", "#3333FF",
                       "#ff00ff", "#ffff00", "#ff0000"]
-#   graph.replace_colors [colors[:my_red],
-#                         colors[:my_orange],
-#                         colors[:my_yellow],
-#                         colors[:my_pale_yellow],
-#                         colors[:my_pale_green],
-#                         colors[:my_green]]
+
   graph.title = "#{header} #{key}-mer 10000 bp Overlap Taxonomic Classification"
   graph.title_font_size = 20
   graph.marker_font_size = 16
   graph.x_axis_label = "relative piece location"
   graph.y_axis_label = "raw score"
-  # graph.maximum_value = 100
-  # graph.minimum_value = 0
+  graph.maximum_value = 1.85
+  graph.minimum_value = 1.55
 
   array_dat = value.reverse
+  array_dat.each { |tmp_arr|
+    tmp_arr.map! { |item| ("%5.6f" % ((item /= 10000) + 3)).to_f }
+    tmp_mean = tmp_arr.mean
+    tmp_arr.map! { |item|
+       if item < graph.maximum_value and item > graph.minimum_value
+         item
+       else
+         item = tmp_mean
+       end
+    }
+  }
+
   graph.data "phylum", array_dat[0]
   graph.data "class", array_dat[1]
   graph.data "order", array_dat[2]
   graph.data "family", array_dat[3]
   graph.data "genus", array_dat[4]
   graph.data "species", array_dat[5]
+
 
   graph.write("result-#{header}-#{piece_size}-#{key}-#{date}.png")
 
