@@ -1,0 +1,33 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.class
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Visual SlickEdit intermediate files
+*.vp*
+*.vtg
+
+# Visual Studio intermediate files
+*.*sdf
+*.*log
+*.suo
+*.pdb
+*.obj
+*.vcxproj.user
+Debug
+ipch
+
+# Mac OS X .DS_Store trash files
+.DS_Store
+
+*.bin
