@@ -1,0 +1,5 @@
+default:
+  server: 123.456.789.0
+  username: xxxxxxx
+  password: xxxxxxx
+  database: biosql
