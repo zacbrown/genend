@@ -77,6 +77,13 @@ header = file.split('-')[0]
 NUM_KMERS = 31050
 
 score_vals = {'3'=>[],'4'=>[],'5'=>[],'6'=>[],'7'=>[],'8'=>[]}
+spec_names = {
+  "NC_009613"=>"Flavobacterium psychrophilum",
+  "NC_004603"=>"Vibrio parahaemolyticus",
+  "NC_003295"=>"Ralstonia solanacearum",
+  "NC_007622"=>"Staphylococcus aureus",
+  "NC_005823"=>"Leptospira interrogans"
+}
 
 File.open(file, 'r').each { |line|
   tokens = line.split(' ')
@@ -200,8 +207,8 @@ graph_hash.each do |key, value|
   #draw title
   gc.stroke('transparent').fill('black')
   gc.pointsize(48)
-  gc.text(750, 190, "#{header} #{piece_size}bp #{key}-mers #{date}")
+  gc.text(750, 190, "#{spec_names[header]} 10000bp #{key}-mers #{date}")
 
   gc.draw(canvas)
-  canvas.write("result-#{header}-#{piece_size}-#{key}-#{date}.png")
+  canvas.write("result-#{header}-10000-#{key}-#{date}.png")
 end
